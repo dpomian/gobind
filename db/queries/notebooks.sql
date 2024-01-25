@@ -8,7 +8,8 @@ RETURNING *;
 
 -- name: GetNotebook :one
 SELECT * FROM notebooks
-WHERE id = $1 LIMIT 1;
+WHERE id = $1 
+LIMIT 1;
 
 
 -- name: ListNotebooks :many
