@@ -1,0 +1,52 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: ci-test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16.1
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: secret
+          DKR_POSTGRES_PWD: secret
+          POSTGRES_DB: binder
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5444:5432
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Golang Migrate
+      run: |
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate /usr/bin/
+        which migrate
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Run migrations
+      run: DKR_POSTGRES_PWD=secret DKR_POSTGRES_PORT=5444 make migrateup
+
+    - name: Test
+      run: DKR_POSTGRES_PWD=secret make ut
+

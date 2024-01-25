@@ -8,15 +8,15 @@ dropdb:
 	docker exec -it postgres dropdb --username=postgres binder
 
 migrateup:
-	migrate -path db/migrations -database "postgres://postgres:${DKR_POSTGRES_PWD}@localhost:5444/binder?sslmode=disable" -verbose up
+	migrate -path db/migrations -database "postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path db/migrations -database "postgres://postgres:${DKR_POSTGRES_PWD}@localhost:5444/binder?sslmode=disable" -verbose down
+	migrate -path db/migrations -database "postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder?sslmode=disable" -verbose down
 
 sqlc:
 	sqlc generate
 
 ut:
-	go test -timeout 30s -coverprofile=/var/folders/89/btn2849s5dvc1llzpw7f58bm0000gn/T/vscode-goW7XSXR/go-code-cover github.com/dpomian/gobind/db/sqlc
+	go test -timeout 30s -cover github.com/dpomian/gobind/db/sqlc
 
-.PHONY: postgres createdb migrateup migratedow sqlc test
+.PHONY: postgres createdb migrateup migratedow sqlc ut
