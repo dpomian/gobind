@@ -1,9 +1,14 @@
 package models
 
-type Notebook struct {
-	Id      string
-	Title   string `json:"title"`
-	Content string `json:"content"`
+import "time"
 
-	// user_id
+type Notebook struct {
+	Id           string
+	Title        string `json:"title"`
+	Content      string `json:"content"`
+	Topic        string `json:"topic"`
+	Owner        string // user_id
+	Deleted      bool
+	LastModified time.Time
+	CreatedAt    time.Time
 }
