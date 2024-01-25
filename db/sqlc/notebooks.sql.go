@@ -50,10 +50,11 @@ func (q *Queries) CreateNotebook(ctx context.Context, arg CreateNotebookParams) 
 	return i, err
 }
 
-const deleteNotebook = `-- name: DeleteNotebook :exec
+const deleteNotebook = `-- name: DeleteNotebook :one
 UPDATE notebooks 
 SET deleted = true, last_modified = $2
 WHERE id = $1
+RETURNING id, title, topic, content, deleted, last_modified, created_at
 `
 
 type DeleteNotebookParams struct {
@@ -61,9 +62,19 @@ type DeleteNotebookParams struct {
 	LastModified time.Time `json:"last_modified"`
 }
 
-func (q *Queries) DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) error {
-	_, err := q.db.ExecContext(ctx, deleteNotebook, arg.ID, arg.LastModified)
-	return err
+func (q *Queries) DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) (Notebook, error) {
+	row := q.db.QueryRowContext(ctx, deleteNotebook, arg.ID, arg.LastModified)
+	var i Notebook
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Topic,
+		&i.Content,
+		&i.Deleted,
+		&i.LastModified,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const getNotebook = `-- name: GetNotebook :one
