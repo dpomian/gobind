@@ -68,7 +68,7 @@ func (q *Queries) DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) 
 
 const getNotebook = `-- name: GetNotebook :one
 SELECT id, title, topic, content, deleted, last_modified, created_at FROM notebooks
-WHERE id = $1 
+WHERE id = $1 and deleted = false
 LIMIT 1
 `
 
@@ -89,6 +89,7 @@ func (q *Queries) GetNotebook(ctx context.Context, id uuid.UUID) (Notebook, erro
 
 const listNotebooks = `-- name: ListNotebooks :many
 SELECT id, title, topic, content, deleted, last_modified, created_at FROM notebooks
+WHERE deleted = false
 ORDER BY title
 LIMIT $1
 OFFSET $2
@@ -130,10 +131,46 @@ func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([
 	return items, nil
 }
 
+const searchNotebooks = `-- name: SearchNotebooks :many
+SELECT id, title, topic, content, deleted, last_modified, created_at from notebooks
+WHERE deleted = false and (title ILIKE $1 or content ILIKE $1 or topic ILIKE $1)
+`
+
+func (q *Queries) SearchNotebooks(ctx context.Context, title string) ([]Notebook, error) {
+	rows, err := q.db.QueryContext(ctx, searchNotebooks, title)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Notebook
+	for rows.Next() {
+		var i Notebook
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Topic,
+			&i.Content,
+			&i.Deleted,
+			&i.LastModified,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateNotebook = `-- name: UpdateNotebook :one
 UPDATE notebooks 
 SET title = $2, content = $3, topic = $4, last_modified = $5
-WHERE id=$1
+WHERE id=$1 and deleted = false
 RETURNING id, title, topic, content, deleted, last_modified, created_at
 `
 

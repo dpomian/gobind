@@ -19,4 +19,7 @@ sqlc:
 ut:
 	go test -timeout 30s -cover github.com/dpomian/gobind/db/sqlc
 
-.PHONY: postgres createdb migrateup migratedow sqlc ut
+serve:
+	BINDER_DB_DRIVER=postgres BINDER_DB_SOURCE="postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder?sslmode=disable" go run main.go
+
+.PHONY: postgres createdb migrateup migratedow sqlc ut serve
