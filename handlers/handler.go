@@ -37,7 +37,7 @@ func NewNotebooksHandler(db *sql.DB, ctx context.Context) *NotebooksHandler {
 }
 
 func (handler *NotebooksHandler) ListNotebooksHandler(c *gin.Context) {
-	limit := 50
+	limit := 100
 	offset := 0
 
 	query := db.New(handler.db)
@@ -51,10 +51,6 @@ func (handler *NotebooksHandler) ListNotebooksHandler(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, InternalError)
-	}
-
-	if notebooks == nil {
-		notebooks = []db.Notebook{}
 	}
 
 	c.JSON(http.StatusOK, notebooks)

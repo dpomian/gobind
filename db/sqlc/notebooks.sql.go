@@ -117,7 +117,7 @@ func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Notebook
+	items := []Notebook{}
 	for rows.Next() {
 		var i Notebook
 		if err := rows.Scan(
@@ -153,7 +153,7 @@ func (q *Queries) SearchNotebooks(ctx context.Context, title string) ([]Notebook
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Notebook
+	items := []Notebook{}
 	for rows.Next() {
 		var i Notebook
 		if err := rows.Scan(
