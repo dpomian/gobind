@@ -79,6 +79,7 @@ func TestDeleteNotebook(t *testing.T) {
 		ID:           testUUID,
 		LastModified: time.Now(),
 	}
-	err := testQueries.DeleteNotebook(context.Background(), arg)
+	deletedNotebook, err := testQueries.DeleteNotebook(context.Background(), arg)
 	require.NoError(t, err)
+	require.NotEmpty(t, deletedNotebook)
 }

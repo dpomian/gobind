@@ -9,14 +9,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbDriver = "postgres"
-)
-
-var dbSource = "postgres://postgres:" + os.Getenv("DKR_POSTGRES_PWD") + "@localhost:5444/binder?sslmode=disable"
 var testQueries *Queries
 
 func TestMain(m *testing.M) {
+	var dbSource = os.Getenv("BINDER_DB_SOURCE")
+	var dbDriver = os.Getenv("BINDER_DB_DRIVER")
+
 	conn, err := sql.Open(dbDriver, dbSource)
 
 	tx := beginTx(conn)
