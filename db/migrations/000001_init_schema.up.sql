@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS notebooks (
-    id UUID NOT NULL,
+    id UUID NOT NULL UNIQUE,
     title character varying(255) NOT NULL,
     topic character varying(255) NOT NULL default('Misc'),
     content text NOT NULL default(''),

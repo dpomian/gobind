@@ -68,7 +68,8 @@ func (q *Queries) DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) 
 
 const getNotebook = `-- name: GetNotebook :one
 SELECT id, title, topic, content, deleted, last_modified, created_at FROM notebooks
-WHERE id = $1 LIMIT 1
+WHERE id = $1 
+LIMIT 1
 `
 
 func (q *Queries) GetNotebook(ctx context.Context, id uuid.UUID) (Notebook, error) {

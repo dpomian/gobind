@@ -16,4 +16,7 @@ migratedown:
 sqlc:
 	sqlc generate
 
-.PHONY: postgres createdb migrateup migratedow sqlc
+ut:
+	go test -timeout 30s -coverprofile=/var/folders/89/btn2849s5dvc1llzpw7f58bm0000gn/T/vscode-goW7XSXR/go-code-cover github.com/dpomian/gobind/db/sqlc
+
+.PHONY: postgres createdb migrateup migratedow sqlc test
