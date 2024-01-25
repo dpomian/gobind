@@ -25,10 +25,11 @@ SET title = $2, content = $3, topic = $4, last_modified = $5
 WHERE id=$1 and deleted = false
 RETURNING *;
 
--- name: DeleteNotebook :exec
+-- name: DeleteNotebook :one
 UPDATE notebooks 
 SET deleted = true, last_modified = $2
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;
 
 -- name: SearchNotebooks :many
 SELECT * from notebooks

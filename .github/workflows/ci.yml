@@ -21,7 +21,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: secret
           DKR_POSTGRES_PWD: secret
-          POSTGRES_DB: binder
+          POSTGRES_DB: binder_ut
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -45,8 +45,8 @@ jobs:
         go-version: '1.21'
 
     - name: Run migrations
-      run: DKR_POSTGRES_PWD=secret DKR_POSTGRES_PORT=5444 make migrateup
+      run: DKR_POSTGRES_PWD=secret DKR_POSTGRES_PORT=5444 make migrateuput
 
     - name: Test
-      run: DKR_POSTGRES_PWD=secret make ut
+      run: DKR_POSTGRES_PWD=secret DKR_POSTGRES_PORT=5444 make ut
 

@@ -82,7 +82,7 @@ func (handler *NotebooksHandler) ListNotebookByIdHandler(c *gin.Context) {
 
 	fmt.Println(dbNotebook)
 	if err == sql.ErrNoRows {
-		c.JSON(http.StatusOK, struct{}{})
+		c.JSON(http.StatusNotFound, NotebookNotFound)
 		return
 	} else if err != nil {
 		fmt.Println(err)
@@ -164,7 +164,11 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 	}
 	query := db.New(handler.db)
 	dbNotebook, err := query.UpdateNotebook(handler.ctx, arg)
-	if err != nil {
+
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, NotebookNotFound)
+		return
+	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, InternalError)
 		return
 	}
@@ -200,9 +204,12 @@ func (handler *NotebooksHandler) DeleteNotebookHandler(c *gin.Context) {
 	}
 
 	query := db.New(handler.db)
-	err = query.DeleteNotebook(handler.ctx, args)
+	_, err = query.DeleteNotebook(handler.ctx, args)
 
-	if err != nil {
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, NotebookNotFound)
+		return
+	} else if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, InternalError)
 		return
