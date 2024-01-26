@@ -1,39 +1,39 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"log"
 	"os"
 
-	"github.com/dpomian/gobind/handlers"
-	"github.com/gin-gonic/gin"
+	"github.com/dpomian/gobind/api"
+	db "github.com/dpomian/gobind/db/sqlc"
 	_ "github.com/lib/pq"
 )
 
-var apiHandler *handlers.NotebooksHandler
+var storage db.Storage
 
 func init() {
+
+}
+
+func main() {
+	startGinServer(":5050")
+}
+
+func startGinServer(address string) {
 	var dbSource = os.Getenv("BINDER_DB_SOURCE")
 	var dbDriver = os.Getenv("BINDER_DB_DRIVER")
-	db, err := sql.Open(dbDriver, dbSource)
+	database, err := sql.Open(dbDriver, dbSource)
 
 	if err != nil {
 		log.Fatal("cannot connect do db:", err)
 	}
 
-	apiHandler = handlers.NewNotebooksHandler(db, context.Background())
-}
+	storage = db.NewStorage(database)
 
-func main() {
-	router := gin.Default()
-
-	router.GET("/api/v1/notebooks", apiHandler.ListNotebooksHandler)
-	router.GET("/api/v1/notebooks/:id", apiHandler.ListNotebookByIdHandler)
-	router.POST("/api/v1/notebooks", apiHandler.AddNewNotebookHandler)
-	router.PUT("/api/v1/notebooks/:id", apiHandler.UpdateNotebookHandler)
-	router.GET("/api/v1/notebooks/search", apiHandler.SearchNotebookHandler)
-	router.DELETE("/api/v1/notebooks/:id", apiHandler.DeleteNotebookHandler)
-
-	router.Run(":5050")
+	server, err := api.NewServer(storage)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server.Start(address)
 }

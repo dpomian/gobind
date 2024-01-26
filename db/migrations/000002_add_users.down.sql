@@ -1,0 +1,2 @@
+ALTER TABLE notebooks DROP COLUMN IF EXISTS user_id;
+DROP TABLE users CASCADE;
