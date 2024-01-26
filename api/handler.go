@@ -1,4 +1,4 @@
-package handlers
+package api
 
 import (
 	"context"
@@ -25,14 +25,14 @@ var (
 )
 
 type NotebooksHandler struct {
-	db  *sql.DB
-	ctx context.Context
+	storage db.Storage
+	ctx     context.Context
 }
 
-func NewNotebooksHandler(db *sql.DB, ctx context.Context) *NotebooksHandler {
+func NewNotebooksHandler(storage db.Storage, ctx context.Context) *NotebooksHandler {
 	return &NotebooksHandler{
-		db:  db,
-		ctx: ctx,
+		storage: storage,
+		ctx:     ctx,
 	}
 }
 
@@ -40,14 +40,12 @@ func (handler *NotebooksHandler) ListNotebooksHandler(c *gin.Context) {
 	limit := 100
 	offset := 0
 
-	query := db.New(handler.db)
-
 	arg := db.ListNotebooksParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
 
-	notebooks, err := query.ListNotebooks(handler.ctx, arg)
+	notebooks, err := handler.storage.ListNotebooks(handler.ctx, arg)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, InternalError)
@@ -73,8 +71,7 @@ func (handler *NotebooksHandler) ListNotebookByIdHandler(c *gin.Context) {
 		return
 	}
 
-	query := db.New(handler.db)
-	dbNotebook, err := query.GetNotebook(handler.ctx, rqNotebookId)
+	dbNotebook, err := handler.storage.GetNotebook(handler.ctx, rqNotebookId)
 
 	fmt.Println(dbNotebook)
 	if err == sql.ErrNoRows {
@@ -108,7 +105,6 @@ func (handler *NotebooksHandler) AddNewNotebookHandler(c *gin.Context) {
 		newNotebook.Topic = MiscTopic
 	}
 
-	query := db.New(handler.db)
 	arg := db.CreateNotebookParams{
 		ID:        uuid.New(),
 		Title:     newNotebook.Title,
@@ -117,7 +113,7 @@ func (handler *NotebooksHandler) AddNewNotebookHandler(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 
-	dbNotebook, err := query.CreateNotebook(handler.ctx, arg)
+	dbNotebook, err := handler.storage.CreateNotebook(handler.ctx, arg)
 	if err != nil {
 		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, InternalError)
@@ -158,8 +154,7 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 		Topic:        rqNotebook.Topic,
 		LastModified: time.Now(),
 	}
-	query := db.New(handler.db)
-	dbNotebook, err := query.UpdateNotebook(handler.ctx, arg)
+	dbNotebook, err := handler.storage.UpdateNotebook(handler.ctx, arg)
 
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, NotebookNotFound)
@@ -176,8 +171,7 @@ func (handler *NotebooksHandler) SearchNotebookHandler(c *gin.Context) {
 	searchBy := "%" + c.Query("text") + "%"
 
 	fmt.Println(searchBy)
-	query := db.New(handler.db)
-	notebooks, err := query.SearchNotebooks(handler.ctx, searchBy)
+	notebooks, err := handler.storage.SearchNotebooks(handler.ctx, searchBy)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, InternalError)
@@ -199,8 +193,7 @@ func (handler *NotebooksHandler) DeleteNotebookHandler(c *gin.Context) {
 		LastModified: time.Now(),
 	}
 
-	query := db.New(handler.db)
-	_, err = query.DeleteNotebook(handler.ctx, args)
+	_, err = handler.storage.DeleteNotebook(handler.ctx, args)
 
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, NotebookNotFound)
