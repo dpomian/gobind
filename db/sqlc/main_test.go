@@ -6,14 +6,24 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
+type TestData struct {
+	userId1 uuid.UUID
+}
+
 var testQueries *Queries
+var testData TestData
 
 func TestMain(m *testing.M) {
 	var dbSource = os.Getenv("BINDER_DB_SOURCE")
 	var dbDriver = os.Getenv("BINDER_DB_DRIVER")
+
+	testData = TestData{
+		userId1: uuid.New(),
+	}
 
 	conn, err := sql.Open(dbDriver, dbSource)
 

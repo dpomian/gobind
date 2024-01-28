@@ -2,11 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
-	"os"
 
 	"github.com/dpomian/gobind/api"
 	db "github.com/dpomian/gobind/db/sqlc"
+	"github.com/dpomian/gobind/utils"
 	_ "github.com/lib/pq"
 )
 
@@ -21,9 +22,14 @@ func main() {
 }
 
 func startGinServer(address string) {
-	var dbSource = os.Getenv("BINDER_DB_SOURCE")
-	var dbDriver = os.Getenv("BINDER_DB_DRIVER")
-	database, err := sql.Open(dbDriver, dbSource)
+	config, err := utils.LoadConfig("")
+	if err != nil {
+		log.Fatal("cannot load config")
+	}
+
+	fmt.Println("config:", config)
+
+	database, err := sql.Open(config.DBDriver, config.DBSource)
 
 	if err != nil {
 		log.Fatal("cannot connect do db:", err)
@@ -31,7 +37,7 @@ func startGinServer(address string) {
 
 	storage = db.NewStorage(database)
 
-	server, err := api.NewServer(storage)
+	server, err := api.NewServer(config, storage)
 	if err != nil {
 		log.Fatal(err)
 	}

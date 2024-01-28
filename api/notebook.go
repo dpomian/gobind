@@ -10,6 +10,7 @@ import (
 	db "github.com/dpomian/gobind/db/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const (
@@ -22,6 +23,7 @@ var (
 	NotebookNotFound = gin.H{"error": "notebook not found"}
 	NotImplemented   = gin.H{"error": "not implemented"}
 	NotebookDeleted  = gin.H{"message": "notebook deleted"}
+	Forbidden        = gin.H{"message": "forbidden"}
 )
 
 type NotebooksHandler struct {
@@ -40,7 +42,10 @@ func (handler *NotebooksHandler) ListNotebooksHandler(c *gin.Context) {
 	limit := 100
 	offset := 0
 
+	userId := uuid.New() // TODO: get the userId from the session token
+
 	arg := db.ListNotebooksParams{
+		UserID: userId,
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
@@ -71,7 +76,13 @@ func (handler *NotebooksHandler) ListNotebookByIdHandler(c *gin.Context) {
 		return
 	}
 
-	dbNotebook, err := handler.storage.GetNotebook(handler.ctx, rqNotebookId)
+	userId := uuid.New() // TODO: get the userId from the session token
+
+	arg := db.GetNotebookParams{
+		ID:     rqNotebookId,
+		UserID: userId,
+	}
+	dbNotebook, err := handler.storage.GetNotebook(handler.ctx, arg)
 
 	fmt.Println(dbNotebook)
 	if err == sql.ErrNoRows {
@@ -105,8 +116,11 @@ func (handler *NotebooksHandler) AddNewNotebookHandler(c *gin.Context) {
 		newNotebook.Topic = MiscTopic
 	}
 
+	userId := uuid.New() // TODO: get the userId from the session token
+
 	arg := db.CreateNotebookParams{
 		ID:        uuid.New(),
+		UserID:    userId,
 		Title:     newNotebook.Title,
 		Topic:     newNotebook.Topic,
 		Content:   newNotebook.Content,
@@ -115,8 +129,16 @@ func (handler *NotebooksHandler) AddNewNotebookHandler(c *gin.Context) {
 
 	dbNotebook, err := handler.storage.CreateNotebook(handler.ctx, arg)
 	if err != nil {
-		fmt.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, InternalError)
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "foreign_key_violation", "unique_violation":
+				c.JSON(http.StatusForbidden, Forbidden)
+			}
+		} else {
+			fmt.Println(err.Error())
+			c.JSON(http.StatusInternalServerError, InternalError)
+
+		}
 		return
 	}
 
@@ -147,8 +169,11 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 		rqNotebook.Topic = MiscTopic
 	}
 
+	userId := uuid.New() // TODO: get the userId from the session token
+
 	arg := db.UpdateNotebookParams{
 		ID:           rqNotebookId,
+		UserID:       userId,
 		Title:        rqNotebook.Title,
 		Content:      rqNotebook.Content,
 		Topic:        rqNotebook.Topic,
@@ -170,8 +195,13 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 func (handler *NotebooksHandler) SearchNotebookHandler(c *gin.Context) {
 	searchBy := "%" + c.Query("text") + "%"
 
-	fmt.Println(searchBy)
-	notebooks, err := handler.storage.SearchNotebooks(handler.ctx, searchBy)
+	userId := uuid.New() // TODO: get the userId from the session token
+
+	arg := db.SearchNotebooksParams{
+		UserID: userId,
+		Title:  searchBy,
+	}
+	notebooks, err := handler.storage.SearchNotebooks(handler.ctx, arg)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, InternalError)
@@ -188,8 +218,11 @@ func (handler *NotebooksHandler) DeleteNotebookHandler(c *gin.Context) {
 		return
 	}
 
+	userId := uuid.New() // TODO: get the userId from the session token
+
 	args := db.DeleteNotebookParams{
 		ID:           rqNotebookId,
+		UserID:       userId,
 		LastModified: time.Now(),
 	}
 

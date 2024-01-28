@@ -14,11 +14,11 @@ import (
 
 const createNotebook = `-- name: CreateNotebook :one
 INSERT INTO notebooks (
-  id, title, topic, content, created_at
+  id, title, topic, content, user_id, created_at
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 )
-RETURNING id, title, topic, content, deleted, last_modified, created_at
+RETURNING id, title, topic, content, deleted, last_modified, created_at, user_id
 `
 
 type CreateNotebookParams struct {
@@ -26,6 +26,7 @@ type CreateNotebookParams struct {
 	Title     string    `json:"title"`
 	Topic     string    `json:"topic"`
 	Content   string    `json:"content"`
+	UserID    uuid.UUID `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -35,6 +36,7 @@ func (q *Queries) CreateNotebook(ctx context.Context, arg CreateNotebookParams) 
 		arg.Title,
 		arg.Topic,
 		arg.Content,
+		arg.UserID,
 		arg.CreatedAt,
 	)
 	var i Notebook
@@ -46,24 +48,26 @@ func (q *Queries) CreateNotebook(ctx context.Context, arg CreateNotebookParams) 
 		&i.Deleted,
 		&i.LastModified,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const deleteNotebook = `-- name: DeleteNotebook :one
 UPDATE notebooks 
-SET deleted = true, last_modified = $2
-WHERE id = $1
-RETURNING id, title, topic, content, deleted, last_modified, created_at
+SET deleted = true, last_modified = $3
+WHERE id = $1 and user_id = $2
+RETURNING id, title, topic, content, deleted, last_modified, created_at, user_id
 `
 
 type DeleteNotebookParams struct {
 	ID           uuid.UUID `json:"id"`
+	UserID       uuid.UUID `json:"user_id"`
 	LastModified time.Time `json:"last_modified"`
 }
 
 func (q *Queries) DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) (Notebook, error) {
-	row := q.db.QueryRowContext(ctx, deleteNotebook, arg.ID, arg.LastModified)
+	row := q.db.QueryRowContext(ctx, deleteNotebook, arg.ID, arg.UserID, arg.LastModified)
 	var i Notebook
 	err := row.Scan(
 		&i.ID,
@@ -73,18 +77,24 @@ func (q *Queries) DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) 
 		&i.Deleted,
 		&i.LastModified,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getNotebook = `-- name: GetNotebook :one
-SELECT id, title, topic, content, deleted, last_modified, created_at FROM notebooks
-WHERE id = $1 and deleted = false
+SELECT id, title, topic, content, deleted, last_modified, created_at, user_id FROM notebooks
+WHERE id = $1 and user_id = $2 and deleted = false
 LIMIT 1
 `
 
-func (q *Queries) GetNotebook(ctx context.Context, id uuid.UUID) (Notebook, error) {
-	row := q.db.QueryRowContext(ctx, getNotebook, id)
+type GetNotebookParams struct {
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) GetNotebook(ctx context.Context, arg GetNotebookParams) (Notebook, error) {
+	row := q.db.QueryRowContext(ctx, getNotebook, arg.ID, arg.UserID)
 	var i Notebook
 	err := row.Scan(
 		&i.ID,
@@ -94,25 +104,27 @@ func (q *Queries) GetNotebook(ctx context.Context, id uuid.UUID) (Notebook, erro
 		&i.Deleted,
 		&i.LastModified,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const listNotebooks = `-- name: ListNotebooks :many
-SELECT id, title, topic, content, deleted, last_modified, created_at FROM notebooks
-WHERE deleted = false
+SELECT id, title, topic, content, deleted, last_modified, created_at, user_id FROM notebooks
+WHERE user_id = $1 and deleted = false
 ORDER BY title
-LIMIT $1
-OFFSET $2
+LIMIT $2
+OFFSET $3
 `
 
 type ListNotebooksParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	UserID uuid.UUID `json:"user_id"`
+	Limit  int32     `json:"limit"`
+	Offset int32     `json:"offset"`
 }
 
 func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([]Notebook, error) {
-	rows, err := q.db.QueryContext(ctx, listNotebooks, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listNotebooks, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +140,7 @@ func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([
 			&i.Deleted,
 			&i.LastModified,
 			&i.CreatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -143,12 +156,17 @@ func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([
 }
 
 const searchNotebooks = `-- name: SearchNotebooks :many
-SELECT id, title, topic, content, deleted, last_modified, created_at from notebooks
-WHERE deleted = false and (title ILIKE $1 or content ILIKE $1 or topic ILIKE $1)
+SELECT id, title, topic, content, deleted, last_modified, created_at, user_id from notebooks
+WHERE user_id = $1 and deleted = false and (title ILIKE $2 or content ILIKE $2 or topic ILIKE $2)
 `
 
-func (q *Queries) SearchNotebooks(ctx context.Context, title string) ([]Notebook, error) {
-	rows, err := q.db.QueryContext(ctx, searchNotebooks, title)
+type SearchNotebooksParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	Title  string    `json:"title"`
+}
+
+func (q *Queries) SearchNotebooks(ctx context.Context, arg SearchNotebooksParams) ([]Notebook, error) {
+	rows, err := q.db.QueryContext(ctx, searchNotebooks, arg.UserID, arg.Title)
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +182,7 @@ func (q *Queries) SearchNotebooks(ctx context.Context, title string) ([]Notebook
 			&i.Deleted,
 			&i.LastModified,
 			&i.CreatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -180,13 +199,14 @@ func (q *Queries) SearchNotebooks(ctx context.Context, title string) ([]Notebook
 
 const updateNotebook = `-- name: UpdateNotebook :one
 UPDATE notebooks 
-SET title = $2, content = $3, topic = $4, last_modified = $5
-WHERE id=$1 and deleted = false
-RETURNING id, title, topic, content, deleted, last_modified, created_at
+SET title = $3, content = $4, topic = $5, last_modified = $6
+WHERE id=$1 and user_id = $2 and deleted = false 
+RETURNING id, title, topic, content, deleted, last_modified, created_at, user_id
 `
 
 type UpdateNotebookParams struct {
 	ID           uuid.UUID `json:"id"`
+	UserID       uuid.UUID `json:"user_id"`
 	Title        string    `json:"title"`
 	Content      string    `json:"content"`
 	Topic        string    `json:"topic"`
@@ -196,6 +216,7 @@ type UpdateNotebookParams struct {
 func (q *Queries) UpdateNotebook(ctx context.Context, arg UpdateNotebookParams) (Notebook, error) {
 	row := q.db.QueryRowContext(ctx, updateNotebook,
 		arg.ID,
+		arg.UserID,
 		arg.Title,
 		arg.Content,
 		arg.Topic,
@@ -210,6 +231,7 @@ func (q *Queries) UpdateNotebook(ctx context.Context, arg UpdateNotebookParams) 
 		&i.Deleted,
 		&i.LastModified,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
