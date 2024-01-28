@@ -116,7 +116,7 @@ func (handler *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := handler.tokenMaker.CreateToken(rq.Email, handler.config.AccessTokenDuration)
+	accessToken, err := handler.tokenMaker.CreateToken(user.ID.String(), handler.config.AccessTokenDuration)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, InternalError)
 		return

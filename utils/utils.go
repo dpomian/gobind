@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -15,4 +16,8 @@ func RandomString(length int) string {
 		b = append(b, charset[seededRand.Intn(len(charset))])
 	}
 	return string(b)
+}
+
+func RandomEmail() string {
+	return fmt.Sprintf("%s@example.com", RandomString(6))
 }
