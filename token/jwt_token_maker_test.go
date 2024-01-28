@@ -7,6 +7,7 @@ import (
 
 	"github.com/dpomian/gobind/utils"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,13 +15,13 @@ func TestJWTTokenMaker(t *testing.T) {
 	tokenMaker, err := NewJWTTokenMaker(utils.RandomString(32))
 	require.NoError(t, err)
 
-	email := "user1@email.com"
+	userId := uuid.New()
 	duration := 1 * time.Minute
 
 	issuedAt := time.Now()
 	expireAt := issuedAt.Add(duration)
 
-	token, err := tokenMaker.CreateToken(email, duration)
+	token, err := tokenMaker.CreateToken(userId.String(), duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
@@ -29,7 +30,7 @@ func TestJWTTokenMaker(t *testing.T) {
 	require.NotEmpty(t, payload)
 
 	require.NotZero(t, payload.ID)
-	require.Equal(t, email, payload.Email)
+	require.Equal(t, userId, payload.UserId)
 	require.WithinDuration(t, issuedAt, payload.IssuedAt, 1*time.Second)
 	require.WithinDuration(t, expireAt, payload.ExpiredAt, 1*time.Second)
 }
@@ -38,7 +39,7 @@ func TestExpiredJWTToken(t *testing.T) {
 	tokenMaker, err := NewJWTTokenMaker(utils.RandomString(32))
 	require.NoError(t, err)
 
-	expiredToken, err := tokenMaker.CreateToken("user1@email.com", -1*time.Minute)
+	expiredToken, err := tokenMaker.CreateToken(uuid.NewString(), -1*time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, expiredToken)
 
@@ -50,7 +51,7 @@ func TestExpiredJWTToken(t *testing.T) {
 }
 
 func TestInvalidJWTToken(t *testing.T) {
-	payload, err := NewPayload("user1@email.com", 1*time.Minute)
+	payload, err := NewPayload(uuid.New(), 1*time.Minute)
 	require.NoError(t, err)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)

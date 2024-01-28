@@ -8,6 +8,7 @@ import (
 	"time"
 
 	db "github.com/dpomian/gobind/db/sqlc"
+	"github.com/dpomian/gobind/token"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -42,10 +43,10 @@ func (handler *NotebooksHandler) ListNotebooksHandler(c *gin.Context) {
 	limit := 100
 	offset := 0
 
-	userId := uuid.New() // TODO: get the userId from the session token
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	arg := db.ListNotebooksParams{
-		UserID: userId,
+		UserID: authPayload.UserId,
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
@@ -76,15 +77,14 @@ func (handler *NotebooksHandler) ListNotebookByIdHandler(c *gin.Context) {
 		return
 	}
 
-	userId := uuid.New() // TODO: get the userId from the session token
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	arg := db.GetNotebookParams{
 		ID:     rqNotebookId,
-		UserID: userId,
+		UserID: authPayload.UserId,
 	}
 	dbNotebook, err := handler.storage.GetNotebook(handler.ctx, arg)
 
-	fmt.Println(dbNotebook)
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, NotebookNotFound)
 		return
@@ -116,11 +116,11 @@ func (handler *NotebooksHandler) AddNewNotebookHandler(c *gin.Context) {
 		newNotebook.Topic = MiscTopic
 	}
 
-	userId := uuid.New() // TODO: get the userId from the session token
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	arg := db.CreateNotebookParams{
 		ID:        uuid.New(),
-		UserID:    userId,
+		UserID:    authPayload.UserId,
 		Title:     newNotebook.Title,
 		Topic:     newNotebook.Topic,
 		Content:   newNotebook.Content,
@@ -169,11 +169,11 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 		rqNotebook.Topic = MiscTopic
 	}
 
-	userId := uuid.New() // TODO: get the userId from the session token
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	arg := db.UpdateNotebookParams{
 		ID:           rqNotebookId,
-		UserID:       userId,
+		UserID:       authPayload.UserId,
 		Title:        rqNotebook.Title,
 		Content:      rqNotebook.Content,
 		Topic:        rqNotebook.Topic,
@@ -195,15 +195,14 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 func (handler *NotebooksHandler) SearchNotebookHandler(c *gin.Context) {
 	searchBy := "%" + c.Query("text") + "%"
 
-	userId := uuid.New() // TODO: get the userId from the session token
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	arg := db.SearchNotebooksParams{
-		UserID: userId,
+		UserID: authPayload.UserId,
 		Title:  searchBy,
 	}
 	notebooks, err := handler.storage.SearchNotebooks(handler.ctx, arg)
 	if err != nil {
-		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, InternalError)
 		return
 	}
@@ -218,11 +217,11 @@ func (handler *NotebooksHandler) DeleteNotebookHandler(c *gin.Context) {
 		return
 	}
 
-	userId := uuid.New() // TODO: get the userId from the session token
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	args := db.DeleteNotebookParams{
 		ID:           rqNotebookId,
-		UserID:       userId,
+		UserID:       authPayload.UserId,
 		LastModified: time.Now(),
 	}
 

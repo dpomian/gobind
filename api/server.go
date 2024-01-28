@@ -3,11 +3,14 @@ package api
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
 
 	db "github.com/dpomian/gobind/db/sqlc"
 	"github.com/dpomian/gobind/token"
 	"github.com/dpomian/gobind/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 )
 
 type Server struct {
@@ -33,17 +36,30 @@ func NewServer(config utils.Config, storage db.Storage) (*Server, error) {
 	return server, nil
 }
 
+func newTestServer(t *testing.T, storage db.Storage) *Server {
+	config := utils.Config{
+		TokenSymmetricKey:   utils.RandomString(32),
+		AccessTokenDuration: time.Minute,
+	}
+
+	server, err := NewServer(config, storage)
+	require.NoError(t, err)
+
+	return server
+}
+
 func (server *Server) configureRoutes() {
 	router := gin.Default()
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	notebookApiHandler := NewNotebooksHandler(server.storage, context.Background())
 
-	router.GET("/api/v1/notebooks", notebookApiHandler.ListNotebooksHandler)
-	router.GET("/api/v1/notebooks/:id", notebookApiHandler.ListNotebookByIdHandler)
-	router.POST("/api/v1/notebooks", notebookApiHandler.AddNewNotebookHandler)
-	router.PUT("/api/v1/notebooks/:id", notebookApiHandler.UpdateNotebookHandler)
-	router.GET("/api/v1/notebooks/search", notebookApiHandler.SearchNotebookHandler)
-	router.DELETE("/api/v1/notebooks/:id", notebookApiHandler.DeleteNotebookHandler)
+	authRoutes.GET("/api/v1/notebooks", notebookApiHandler.ListNotebooksHandler)
+	authRoutes.GET("/api/v1/notebooks/:id", notebookApiHandler.ListNotebookByIdHandler)
+	authRoutes.POST("/api/v1/notebooks", notebookApiHandler.AddNewNotebookHandler)
+	authRoutes.PUT("/api/v1/notebooks/:id", notebookApiHandler.UpdateNotebookHandler)
+	authRoutes.GET("/api/v1/notebooks/search", notebookApiHandler.SearchNotebookHandler)
+	authRoutes.DELETE("/api/v1/notebooks/:id", notebookApiHandler.DeleteNotebookHandler)
 
 	userApiHandler := NewUserHander(server.config, server.tokenMaker, server.storage, context.Background())
 
