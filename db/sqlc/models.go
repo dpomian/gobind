@@ -18,4 +18,15 @@ type Notebook struct {
 	Deleted      bool      `json:"deleted"`
 	LastModified time.Time `json:"last_modified"`
 	CreatedAt    time.Time `json:"created_at"`
+	UserID       uuid.UUID `json:"user_id"`
+}
+
+type User struct {
+	ID                uuid.UUID `json:"id"`
+	Username          string    `json:"username"`
+	Email             string    `json:"email"`
+	Password          string    `json:"password"`
+	Suspended         bool      `json:"suspended"`
+	CreatedAt         time.Time `json:"created_at"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
 }

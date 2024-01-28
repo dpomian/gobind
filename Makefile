@@ -34,6 +34,9 @@ migratedown1:
 migratedownut:
 	migrate -path db/migrations -database "postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder_ut?sslmode=disable" -verbose down
 
+migratedownut1:
+	migrate -path db/migrations -database "postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder_ut?sslmode=disable" -verbose down
+
 sqlc:
 	sqlc generate
 
@@ -46,4 +49,4 @@ serve:
 mock:
 	mockgen -package mockdb -destination db/mock/storage.go github.com/dpomian/gobind/db/sqlc Storage
 
-.PHONY: postgres createdb createdbut migrateup migratedown migrateup1 migratedown1 migrateuput migratedownut migrateuput1 sqlc ut serve mock
+.PHONY: postgres createdb createdbut migrateup migratedown migrateup1 migratedown1 migrateuput migratedownut migrateuput1 migratedownut1 sqlc ut serve mock

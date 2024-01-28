@@ -11,12 +11,14 @@ import (
 )
 
 func TestCreateNotebook(t *testing.T) {
+	user := createRandomUser(t)
 	testUUID := uuid.MustParse("3560f394-1996-434d-8e0b-755a0f3601b5")
 	arg := CreateNotebookParams{
 		ID:        testUUID,
 		Title:     "Title1",
 		Topic:     "Topic1",
 		Content:   "Content 1",
+		UserID:    user.ID,
 		CreatedAt: time.Now(),
 	}
 
@@ -33,7 +35,12 @@ func TestCreateNotebook(t *testing.T) {
 
 func TestGetNotebook(t *testing.T) {
 	testUUID := uuid.MustParse("3560f394-1996-434d-8e0b-755a0f3601b5")
-	notebook, err := testQueries.GetNotebook(context.Background(), testUUID)
+
+	arg := GetNotebookParams{
+		ID:     testUUID,
+		UserID: testData.userId1,
+	}
+	notebook, err := testQueries.GetNotebook(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, notebook)
 }
@@ -41,7 +48,11 @@ func TestGetNotebook(t *testing.T) {
 func TestUpdateNotebook(t *testing.T) {
 	testUUID := uuid.MustParse("3560f394-1996-434d-8e0b-755a0f3601b5")
 
-	notebook, err := testQueries.GetNotebook(context.Background(), testUUID)
+	getNotebookParams := GetNotebookParams{
+		ID:     testUUID,
+		UserID: testData.userId1,
+	}
+	notebook, err := testQueries.GetNotebook(context.Background(), getNotebookParams)
 	require.NoError(t, err)
 	require.NotEmpty(t, notebook)
 
@@ -50,6 +61,7 @@ func TestUpdateNotebook(t *testing.T) {
 
 	arg := UpdateNotebookParams{
 		ID:           testUUID,
+		UserID:       testData.userId1,
 		Title:        notebook.Title,
 		Content:      notebook.Content,
 		Topic:        notebook.Topic,
@@ -64,6 +76,7 @@ func TestUpdateNotebook(t *testing.T) {
 
 func TestListNotebooks(t *testing.T) {
 	arg := ListNotebooksParams{
+		UserID: testData.userId1,
 		Limit:  10,
 		Offset: 0,
 	}
@@ -77,6 +90,7 @@ func TestDeleteNotebook(t *testing.T) {
 	testUUID := uuid.MustParse("3560f394-1996-434d-8e0b-755a0f3601b5")
 	arg := DeleteNotebookParams{
 		ID:           testUUID,
+		UserID:       testData.userId1,
 		LastModified: time.Now(),
 	}
 	deletedNotebook, err := testQueries.DeleteNotebook(context.Background(), arg)
