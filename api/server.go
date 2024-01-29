@@ -53,7 +53,6 @@ func (server *Server) configureRoutes() {
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	notebookApiHandler := NewNotebooksHandler(server.storage, context.Background())
-
 	authRoutes.GET("/api/v1/notebooks", notebookApiHandler.ListNotebooksHandler)
 	authRoutes.GET("/api/v1/notebooks/:id", notebookApiHandler.ListNotebookByIdHandler)
 	authRoutes.POST("/api/v1/notebooks", notebookApiHandler.AddNewNotebookHandler)
@@ -62,9 +61,11 @@ func (server *Server) configureRoutes() {
 	authRoutes.DELETE("/api/v1/notebooks/:id", notebookApiHandler.DeleteNotebookHandler)
 
 	userApiHandler := NewUserHander(server.config, server.tokenMaker, server.storage, context.Background())
-
 	router.POST("/api/v1/users", userApiHandler.AddNewUserHandler)
 	router.POST("/api/v1/users/login", userApiHandler.LoginUser)
+
+	tokenApiHandler := NewTokenHandler(server.config, server.tokenMaker, server.storage, context.Background())
+	router.POST("/api/v1/tokens/renew_access", tokenApiHandler.RenewAccessToken)
 
 	server.router = router
 }

@@ -12,9 +12,11 @@ import (
 
 type Querier interface {
 	CreateNotebook(ctx context.Context, arg CreateNotebookParams) (Notebook, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) (Notebook, error)
 	GetNotebook(ctx context.Context, arg GetNotebookParams) (Notebook, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([]Notebook, error)
