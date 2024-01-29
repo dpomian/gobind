@@ -22,19 +22,20 @@ func NewJWTTokenMaker(secretKey string) (TokenMaker, error) {
 	return &JWTTokenMaker{secretKey: secretKey}, nil
 }
 
-func (tokenMaker *JWTTokenMaker) CreateToken(userId string, duration time.Duration) (string, error) {
+func (tokenMaker *JWTTokenMaker) CreateToken(userId string, duration time.Duration) (string, *Payload, error) {
 	userIdUUID, err := uuid.Parse(userId)
 	if err != nil {
-		return "", fmt.Errorf("invalid userId")
+		return "", nil, fmt.Errorf("invalid userId")
 	}
 
 	payload, err := NewPayload(userIdUUID, duration)
 	if err != nil {
-		return "", nil
+		return "", nil, nil
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	return jwtToken.SignedString([]byte(tokenMaker.secretKey))
+	token, err := jwtToken.SignedString([]byte(tokenMaker.secretKey))
+	return token, payload, err
 }
 
 func (tokenMaker *JWTTokenMaker) VerifyToken(token string) (*Payload, error) {

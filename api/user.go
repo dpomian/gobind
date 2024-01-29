@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	db "github.com/dpomian/gobind/db/sqlc"
 	"github.com/dpomian/gobind/token"
@@ -89,8 +90,12 @@ type loginUserRq struct {
 }
 
 type loginUserRs struct {
-	AccessToken string `json:"access_token"`
-	UserId      string `json:"user_id"`
+	SessionId             uuid.UUID `json:"session_id"`
+	AccessToken           string    `json:"access_token"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at"`
+	RefreshToken          string    `json:"refresh_token"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
+	UserId                string    `json:"user_id"`
 }
 
 func (handler *UserHandler) LoginUser(c *gin.Context) {
@@ -116,15 +121,39 @@ func (handler *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := handler.tokenMaker.CreateToken(user.ID.String(), handler.config.AccessTokenDuration)
+	accessToken, accessPayload, err := handler.tokenMaker.CreateToken(user.ID.String(), handler.config.AccessTokenDuration)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, InternalError)
+		return
+	}
+
+	refreshToken, refreshPayload, err := handler.tokenMaker.CreateToken(user.ID.String(), handler.config.RefreshTokenDuration)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, InternalError)
+		return
+	}
+
+	session, err := handler.storage.CreateSession(handler.ctx, db.CreateSessionParams{
+		ID:           refreshPayload.ID,
+		UserID:       user.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    c.Request.UserAgent(),
+		ClientIp:     c.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, InternalError)
 		return
 	}
 
 	rs := loginUserRs{
-		AccessToken: accessToken,
-		UserId:      user.ID.String(),
+		SessionId:             session.ID,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		UserId:                user.ID.String(),
 	}
 	c.JSON(http.StatusOK, rs)
 }
