@@ -11,6 +11,10 @@ SELECT * FROM notebooks
 WHERE id = $1 and user_id = $2 and deleted = false
 LIMIT 1;
 
+-- name: GetNotebookTitlesByTopic :many
+SELECT id, title FROM notebooks
+WHERE user_id = $1 and topic = $2 and deleted = false;
+
 
 -- name: ListNotebooks :many
 SELECT * FROM notebooks
@@ -34,3 +38,7 @@ RETURNING *;
 -- name: SearchNotebooks :many
 SELECT * from notebooks
 WHERE user_id = $1 and deleted = false and (title ILIKE $2 or content ILIKE $2 or topic ILIKE $2);
+
+-- name: ListTopics :many
+SELECT DISTINCT(topic) from notebooks
+WHERE user_id = $1;

@@ -50,6 +50,8 @@ func newTestServer(t *testing.T, storage db.Storage) *Server {
 
 func (server *Server) configureRoutes() {
 	router := gin.Default()
+	router.Use(corsMiddleware())
+
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	notebookApiHandler := NewNotebooksHandler(server.storage, context.Background())
@@ -59,6 +61,7 @@ func (server *Server) configureRoutes() {
 	authRoutes.PUT("/api/v1/notebooks/:id", notebookApiHandler.UpdateNotebookHandler)
 	authRoutes.GET("/api/v1/notebooks/search", notebookApiHandler.SearchNotebookHandler)
 	authRoutes.DELETE("/api/v1/notebooks/:id", notebookApiHandler.DeleteNotebookHandler)
+	authRoutes.GET("/api/v1/topics", notebookApiHandler.ListTopicsHandler)
 
 	userApiHandler := NewUserHander(server.config, server.tokenMaker, server.storage, context.Background())
 	router.POST("/api/v1/users", userApiHandler.AddNewUserHandler)

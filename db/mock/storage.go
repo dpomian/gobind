@@ -116,6 +116,21 @@ func (mr *MockStorageMockRecorder) GetNotebook(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotebook", reflect.TypeOf((*MockStorage)(nil).GetNotebook), arg0, arg1)
 }
 
+// GetNotebookTitlesByTopic mocks base method.
+func (m *MockStorage) GetNotebookTitlesByTopic(arg0 context.Context, arg1 db.GetNotebookTitlesByTopicParams) ([]db.GetNotebookTitlesByTopicRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNotebookTitlesByTopic", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetNotebookTitlesByTopicRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotebookTitlesByTopic indicates an expected call of GetNotebookTitlesByTopic.
+func (mr *MockStorageMockRecorder) GetNotebookTitlesByTopic(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotebookTitlesByTopic", reflect.TypeOf((*MockStorage)(nil).GetNotebookTitlesByTopic), arg0, arg1)
+}
+
 // GetSession mocks base method.
 func (m *MockStorage) GetSession(arg0 context.Context, arg1 uuid.UUID) (db.Session, error) {
 	m.ctrl.T.Helper()
@@ -174,6 +189,21 @@ func (m *MockStorage) ListNotebooks(arg0 context.Context, arg1 db.ListNotebooksP
 func (mr *MockStorageMockRecorder) ListNotebooks(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNotebooks", reflect.TypeOf((*MockStorage)(nil).ListNotebooks), arg0, arg1)
+}
+
+// ListTopics mocks base method.
+func (m *MockStorage) ListTopics(arg0 context.Context, arg1 uuid.UUID) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTopics", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTopics indicates an expected call of ListTopics.
+func (mr *MockStorageMockRecorder) ListTopics(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTopics", reflect.TypeOf((*MockStorage)(nil).ListTopics), arg0, arg1)
 }
 
 // SearchNotebooks mocks base method.

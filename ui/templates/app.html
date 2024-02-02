@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="/static/css/style.css" rel="stylesheet">
+
+    <title>Binder</title>
+</head>
+<body hx-get="/binder/content" hx-target="#wrapper-container" hx-trigger="load">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <div id="wrapper-container">
+    </div>
+
+    <div id="dummydiv"></div>
+
+    <script>
+        var simplemde = null;
+        var activeNotebook = null;
+        
+        document.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id === 'md-wrapper') {
+                if (simplemde == null) {
+                    simplemde = new SimpleMDE({
+                        element: document.getElementById("markdown-editor"),
+                        shortcuts: {
+                            "toggleFullScreen": "Cmd-Shift-F",
+                        },
+                    });
+
+                    let timeout;
+                    simplemde.codemirror.on("change", function() {
+                        // Clear any previous timeouts
+                        clearTimeout(timeout);
+
+                        // Set a new timeout for 500ms
+                        timeout = setTimeout(function() {
+                            console.log("saving data");
+                            // const formData = new FormData();
+                            // formData.append("active_notebook", getActiveNotebook());
+                            fetch(`/notebooks/${activeNotebook.notebook_id}/`, {
+                                method: "PUT",
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(getActiveNotebook()),
+                            });
+
+                        }, 500);
+                    });
+                }
+                
+                console.log(simplemde);
+                // parse the response
+                activeNotebook = JSON.parse(evt.detail.xhr.responseText);
+                console.log(activeNotebook);
+    
+                // make the md-wrapper visible
+                document.getElementById('md-wrapper').style.display = 'block';
+    
+                // update the markdown section
+                simplemde.value(activeNotebook.notebook_content);
+    
+                var markdownContent = simplemde.value();
+    
+                // update the save button
+                var saveButton = document.getElementById('save-button');
+                saveButton.setAttribute('hx-put', `/notebooks/${activeNotebook.notebook_id}`);
+    
+                // update the title
+                document.getElementById('notebook-title').innerText = "Edit: " + activeNotebook.notebook_title;
+    
+                htmx.process(htmx.find('#md-wrapper'))
+            }
+    
+            if (event.target.classList.contains('accordion-content')) {
+                let allContents = document.querySelectorAll('.accordion-content');
+                allContents.forEach(content => {
+                    if (content !== event.target) {
+                        content.classList.add('hidden');
+                    }
+                });
+                event.target.classList.toggle('hidden');
+            }
+        });
+    
+        var modalElement = document.getElementById("add-notebook-modal")
+
+        var modal = null;
+        if (modalElement !== null) {
+            modal = new bootstrap.Modal(modalElement);
+        }
+    
+        htmx.on("htmx:beforeSwap", (e) => {
+            console.log("detail.target.id: " + e.detail.target.id);
+            console.log("e.detail.xhr.status: " + e.detail.xhr.status);
+        // Empty response targeting #dialog => hide the modal
+            if (e.detail.target.id == "add-notebook-modal-dialog" && e.detail.xhr.status < 400) {
+                if (modal !== null) {
+                    modal.hide();
+                }
+
+                e.detail.shouldSwap = false;
+                window.location.reload();
+            }
+
+            if (e.detail.target.id == "dummydiv") {
+                e.detail.shouldSwap = false;
+                window.location.reload();
+            }
+        })
+
+        function getActiveNotebook() {
+            console.log("over here");
+            if (simplemde != null) {
+                activeNotebook.notebook_content = simplemde.value();
+            }
+            return activeNotebook;
+        }
+    </script>
+</body>
+</html>

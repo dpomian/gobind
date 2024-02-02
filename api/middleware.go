@@ -50,3 +50,23 @@ func authMiddleware(tokenMaker token.TokenMaker) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("origin")
+		fmt.Println("origin:", origin)
+
+		if origin == "http://localhost" || origin == "http://localhost:5051" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		}
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+		} else {
+			c.Next()
+		}
+	}
+}

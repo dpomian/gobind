@@ -111,12 +111,14 @@ func (handler *UserHandler) LoginUser(c *gin.Context) {
 			c.JSON(http.StatusNotFound, UserWithEmailDoesNotExist)
 			return
 		}
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, InternalError)
 		return
 	}
 
 	err = utils.CheckPassword(user.Password, rq.Password)
 	if err != nil {
+		fmt.Println("password check failed. rqpwd:", rq.Password, err)
 		c.JSON(http.StatusUnauthorized, UserNotAuthorized)
 		return
 	}
