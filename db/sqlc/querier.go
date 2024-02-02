@@ -16,10 +16,12 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteNotebook(ctx context.Context, arg DeleteNotebookParams) (Notebook, error)
 	GetNotebook(ctx context.Context, arg GetNotebookParams) (Notebook, error)
+	GetNotebookTitlesByTopic(ctx context.Context, arg GetNotebookTitlesByTopicParams) ([]GetNotebookTitlesByTopicRow, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([]Notebook, error)
+	ListTopics(ctx context.Context, userID uuid.UUID) ([]string, error)
 	SearchNotebooks(ctx context.Context, arg SearchNotebooksParams) ([]Notebook, error)
 	UpdateNotebook(ctx context.Context, arg UpdateNotebookParams) (Notebook, error)
 }

@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap');
+
+:root {
+    --my-bg-gray: #43403f; /* Example color */
+}
+
+
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body{
+    /* background: linear-gradient(90deg, rgb(174, 203, 255) 0%, rgb(172, 236, 248) 35%, rgb(159, 238, 254) 100%); */
+    /* background: linear-gradient(90deg, rgb(100, 169, 178) 20%, rgb(45, 124, 243) 85%); */
+    background: var(--my-bg-gray);
+    font-family: 'Poppins', sans-serif';
+}
+
+#loginform{
+    width: 24%;
+    background-color: white;
+    padding: 50px;
+    border-radius: 20px;
+    margin-top: 150px;
+}
+
+#loginform .btn-primary{
+    width: 100%;
+}
+
+#loginform .form-control{
+    color: rgba(0,0,0,.87);
+    border-bottom-color: rgba(0,0,0,.87);
+    box-shadow: none !important;
+    border: none;
+    border-bottom: 1px solid;
+    border-radius: 4px 4px 0 0;
+}
+
+#loginform .form-label{
+    font-family: 800 !important;
+    font-size: large;
+}
+
+#loginform .form-control::placeholder {
+    font-style: italic;
+}
+
+@media only screen and (max-width:600px){
+    #loginform{
+        width: 100% !important;
+    }
+}
+
+#notebook-title{
+    color: white;
+}
+
+#accordion-title {
+    color: white;
+}
+  
+/* Change the editor background color */
+.CodeMirror-scroll {
+    background-color: #ede7e739; /* Light gray background */
+}
+
+.CodeMirror-gutter-text {
+    color: white
+}
+  
+/* Change the color of the toolbar */
+.editor-toolbar {
+    background-color: #ffffff;
+}

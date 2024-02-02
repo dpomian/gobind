@@ -109,6 +109,44 @@ func (q *Queries) GetNotebook(ctx context.Context, arg GetNotebookParams) (Noteb
 	return i, err
 }
 
+const getNotebookTitlesByTopic = `-- name: GetNotebookTitlesByTopic :many
+SELECT id, title FROM notebooks
+WHERE user_id = $1 and topic = $2 and deleted = false
+`
+
+type GetNotebookTitlesByTopicParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	Topic  string    `json:"topic"`
+}
+
+type GetNotebookTitlesByTopicRow struct {
+	ID    uuid.UUID `json:"id"`
+	Title string    `json:"title"`
+}
+
+func (q *Queries) GetNotebookTitlesByTopic(ctx context.Context, arg GetNotebookTitlesByTopicParams) ([]GetNotebookTitlesByTopicRow, error) {
+	rows, err := q.db.QueryContext(ctx, getNotebookTitlesByTopic, arg.UserID, arg.Topic)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetNotebookTitlesByTopicRow{}
+	for rows.Next() {
+		var i GetNotebookTitlesByTopicRow
+		if err := rows.Scan(&i.ID, &i.Title); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listNotebooks = `-- name: ListNotebooks :many
 SELECT id, title, topic, content, deleted, last_modified, created_at, user_id FROM notebooks
 WHERE user_id = $1 and deleted = false
@@ -145,6 +183,34 @@ func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopics = `-- name: ListTopics :many
+SELECT DISTINCT(topic) from notebooks
+WHERE user_id = $1
+`
+
+func (q *Queries) ListTopics(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listTopics, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var topic string
+		if err := rows.Scan(&topic); err != nil {
+			return nil, err
+		}
+		items = append(items, topic)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

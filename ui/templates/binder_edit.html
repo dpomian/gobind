@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Viewer</title>
+
+    <style>
+        /* Style for making the simplemde div resizable */
+        #markdown-editor-wrapper {
+            max-height: 800px;
+            /* resize: both; */
+            overflow: auto;
+        }
+
+        #markdown-editor-container {
+            padding-bottom: 50px;
+        }
+
+        #notebook-title-list-container {
+            max-height: 600px; /* Set the maximum height as desired */
+            overflow-y: auto; /* Add vertical scrollbar if content overflows */
+            padding-bottom: 20px;
+            /* border: 1px inset #ccc; Optional: Add a border for visual clarity */
+        }
+
+        #document-content {
+            padding-top: 10px;
+        }
+
+        .notebook-title-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .notebook-title-list li{
+            text-decoration: none;
+            color: #146681;
+            transition: color 0.3s;
+            font-family: Helvetica;
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+
+        .notebook-title-list li strong {
+            font-size: 18px;
+        }
+
+        .notebook-title-list li p {
+            font-size: 15px;
+        }
+
+        .notebook-title-list li:hover {
+            background-color: #146681;
+            color: ghostwhite;
+        }
+
+        .element-title {
+            font-size: 20px;
+            user-select: none;
+            font-family: helvetica;
+            padding-bottom: 10px;
+            padding-top: 10px;
+            text-decoration: underline;
+        }
+
+        .element-title1 {
+            font-size: 22px;
+            user-select: none;
+            font-family: helvetica;
+            padding-bottom: 10px;
+            padding-top: 10px;
+            background: #146681;
+            color: ghostwhite;
+            text-align: center;
+        }
+
+        button{
+          padding: 15px 40px;
+          background: #146681;
+          border:0;
+          color: #fff;
+          text-transform: uppercase;
+          font-family: helvetica;
+          font-size: 12px;
+          letter-spacing: 3px;
+          position: relative;
+          transition:         all .4s cubic-bezier(0.645, 0.045, 0.355, 1);
+          cursor: pointer;
+          display: block;
+          /* margin: 5px auto; */
+        }
+
+        button::after,
+        button::before{
+          content: "";
+          position: absolute;
+          top: 50%;
+          right: 0px;
+          transform: translateY(-50%);
+            opacity: 0;
+          transition:         all .4s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        button::after{
+            width: 30px;
+            height: 1px;
+            background: white;
+            transform: translateX(-3px);
+            margin-top: 0px;
+        }
+
+        button::before{
+            content: "";
+            transform: rotate(-135deg) translateX(50%);
+            width: 11px;
+            height: 11px;
+            background: transparent;
+            border-left: 1px solid white;
+            border-bottom: 1px solid white;
+          margin-top: -1px;
+        }
+
+
+        button:hover{
+          padding: 15px 60px 15px 20px;
+        }
+
+        button:hover::after,
+        button:hover::before{
+          opacity: 1;
+          right: 15px;
+        }
+
+        .search-container {
+            width: 100%;
+            position: relative;
+            top: 0;
+            left: 0;
+            background-color: #154f65;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .search-input {
+            width: 59%;
+            padding: 10px;
+            margin: 0 auto;
+            font-size: 16px;
+        }
+
+        #accordion {
+            width: 100%;
+            margin: auto; /* Centers the accordion */
+        }
+
+        .accordion-header {
+            background-color: #eee;
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #ddd;
+            text-align: left; /* Optional: aligns text to the left */
+        }
+
+        .accordion-content {
+            border: 1px solid #ddd;
+            border-top: none;
+            padding: 5px;
+            display: none; /* Initially hide content */
+            max-height: 150px; /* Fixed height; adjust as needed */
+            overflow-y: auto; /* Enables vertical scrolling */
+        }
+
+        .accordion-content li:hover {
+            background-color: #146681;
+            color: ghostwhite;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            display: grid;
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 35%; /* Could be more or less, depending on screen size */
+            height: 25%;
+        }
+
+        #modal-content-input {
+            padding-bottom: 25px;
+        }
+
+        #modal-content-buttons {
+            display: flow;
+        }
+    </style>
+    <script src="/static/js/NotebookActions.js"></script>
+    <script src="/static/js/BinderAppState.js"></script>
+</head>
+<body>
+    <!-- {% load static %} -->
+
+    <div id="search-container" class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search in notebooks...">
+    </div>
+
+    <div id="notebook-list-container" style="float: left; width: 20%;">
+        <div id="notebook-title-list" class="element-title">Notebooks:</div>
+        <div id="accordion">
+            <!-- JavaScript will populate this -->
+        </div>
+        <button id="create-new-notebook">Add New</button>
+    </div>
+
+    <div id="document-content" style="float: left; width: 70%; display: none">
+         <div id="notebook-toolbar" class="notebook-toolbar">
+             <div id="notebook-title" class="element-title1">Document Title</div>
+        </div>
+
+        <div id="markdown-editor-container">
+            <div id="markdown-editor-wrapper">
+                <textarea id="markdown-editor"></textarea>
+            </div>
+        </div>
+        <button id="save-button" style="float: left">Save</button>
+        <button id="delete-button" style="float: right">Delete</button>
+
+    </div>
+
+    <!-- The Modal -->
+    <div id="newNotebookModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+          <div id="modal-content-input">
+              <label for="textInput">Notebook Title:</label>
+              <input type="text" id="add-new-notebook-title" name="add-new-notebook-title">
+
+              <label for="editableSelect">Topic:</label>
+              <input list="options-topic-select" id="editable-topic-select" name="editable-topic-select" />
+              <datalist id="options-topic-select">
+                    <!-- Add more options here -->
+              </datalist>
+          </div>
+          <div id="modal-content-buttons">
+              <button type="button" id="save-new-notebook-button" style="float: left">Save</button>
+              <button type="button" id="cancelAddNewNotebookButton" style="float: right">Cancel</button>
+          </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script>
+        // const appState = new BinderAppState();
+        appState.csrfToken = '{{ .csrf_token }}';
+        buildDocumentTitleList(appState);
+        clearSearchBar();
+        const addNewNotebookModal = document.getElementById("newNotebookModal");
+        addNewNotebookModal.style.display = "none";
+        // When the user clicks anywhere outside the modal, close it
+        window.onclick = function(event) {
+            if (event.target === addNewNotebookModal) {
+                closeCreateNewNotebookModal();
+            }
+        }
+
+        const cancelAddNewNotebookButton = document.getElementById("cancelAddNewNotebookButton");
+        cancelAddNewNotebookButton.onclick = function () {
+            addNewNotebookModal.style.display = "none";
+        }
+
+        /**** SimpleMDE ****/
+        const simplemde = new SimpleMDE({
+            element: document.getElementById("markdown-editor"),
+            shortcuts: {
+                "toggleFullScreen": "Cmd-Shift-F",
+            },
+            /*
+            autosave: {
+                enabled: true,
+                uniqueId: "autosave-" + activeDocumentId,
+                delay: 5000,
+                submit_text: "Save",
+                onUpdateDelay: 1000,
+                text: "Document autosaved at: ",
+            }
+            */
+        });
+        switchToPreviewMode(simplemde);
+        simplemde.codemirror.on("change", function () {
+            appState.contentChanged = true;
+        });
+
+        /*
+        simplemde.codemirror.on("change", () => {
+            simplemde.autosave.save(simplemde.value()); // Trigger autosave when the content changes
+        });
+
+        simplemde.autosave = {
+          save: (content) => {
+              console.log('content: ' + content);
+            // Send the content and document UUID to your Django endpoint using an AJAX request
+            fetch(`notebooks/save/${activeDocumentId}/`, {  // Include the document UUID in the URL
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ .csrf_token }}",
+              },
+              body: JSON.stringify({ content: content }),
+            })
+            .then((response) => {
+                if (!response.ok) {
+                  throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                console.log("Autosave successful:", data);
+            })
+            .catch((error) => {
+                console.error("Autosave failed:", error);
+            });
+          },
+        };
+        */
+
+       /**** End SimpleMDE ****/
+
+        document.getElementById("save-button").addEventListener("click", function () {
+            switchToPreviewMode(simplemde);
+            saveNotebook(appState);
+        });
+
+        document.getElementById("delete-button").addEventListener("click", function () {
+            if (!appState.activeNotebookId) return;
+            const confirmDelete = window.confirm(`Are you sure you want to delete the document?`);
+            if (confirmDelete) {
+                deleteNotebook(appState);
+            }
+        })
+
+        document.getElementById("create-new-notebook").addEventListener("click", function () {
+            console.log("hello");
+            // When the user clicks the button, open the modal
+            showCreateNewNotebookModal();
+        });
+
+        document.getElementById("save-new-notebook-button").addEventListener("click", function () {
+            const newNotebookTitle = document.getElementById('add-new-notebook-title').value;
+            const newNotebookTopic = document.getElementById('editable-topic-select').value;
+            if (newNotebookTopic !== '' && newNotebookTopic !== '') {
+                createNewNotebook({"topic": newNotebookTopic, "title": newNotebookTitle}, appState);
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('keyup', function(e) {
+            const query = e.target.value;
+            buildDocumentTitleList(appState, query);
+        });
+
+        function switchToPreviewMode(mdeComponent) {
+            if (!mdeComponent) return;
+            if (!mdeComponent.isPreviewActive()) {
+                mdeComponent.togglePreview();
+            }
+            else {
+                mdeComponent.togglePreview();
+                mdeComponent.togglePreview();
+            }
+        }
+
+        function hideDocumentContent() {
+            document.getElementById("document-content").style.display = "none";
+        }
+
+        function showDocumentContent() {
+            document.getElementById("document-content").style.display = "block";
+        }
+
+        setInterval(function () {
+            saveNotebook(appState);
+        }, 10000);
+    </script>
+</body>
+</html>

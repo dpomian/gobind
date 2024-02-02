@@ -1,0 +1,21 @@
+{{ range .NotebooksPerTopic }}
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <!-- <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{.}}" aria-expanded="true" aria-controls="collapse-{{.}}" hx-get="/notebooks?topic={{ . }}" hx-trigger="click" hx-target="#notebooks-{{ . }}"> -->
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{.Topic}}" aria-expanded="true" aria-controls="collapse-{{.Topic}}">
+                {{ .Topic }}
+            </button>
+        </h2>
+        <div id="collapse-{{ .Topic }}" class="accordion-collapse collapse" data-bs-parent="#accordion-topics">
+            <div class="accordion-body">
+                <strong id="notebooks-{{.}}">
+                    <div class="list-group">
+                        {{range .Notebooks}}
+                            <a href="#" class="list-group-item list-group-item-action" hx-get="/notebooks/{{.ID}}" hx-target="#md-wrapper" hx-swap="none">{{.Title}}</a>
+                        {{end}}
+                    </div>
+                </strong>
+            </div>
+        </div>                      
+    </div>
+{{ end }}

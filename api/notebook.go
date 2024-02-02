@@ -45,6 +45,11 @@ func (handler *NotebooksHandler) ListNotebooksHandler(c *gin.Context) {
 
 	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
+	if topicQuery := c.Query("topic"); len(topicQuery) > 0 {
+		handler.GetNotebookTitlesByTopic(c)
+		return
+	}
+
 	arg := db.ListNotebooksParams{
 		UserID: authPayload.UserId,
 		Limit:  int32(limit),
@@ -142,7 +147,7 @@ func (handler *NotebooksHandler) AddNewNotebookHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dbNotebook)
+	c.JSON(http.StatusCreated, dbNotebook)
 }
 
 type updateNotebookRq struct {
@@ -193,8 +198,14 @@ func (handler *NotebooksHandler) UpdateNotebookHandler(c *gin.Context) {
 }
 
 func (handler *NotebooksHandler) SearchNotebookHandler(c *gin.Context) {
-	searchBy := "%" + c.Query("text") + "%"
+	searchText := c.Query("text")
 
+	if len(searchText) == 0 {
+		handler.ListNotebooksHandler(c)
+		return
+	}
+
+	searchBy := "%" + searchText + "%"
 	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
 
 	arg := db.SearchNotebooksParams{
@@ -237,4 +248,37 @@ func (handler *NotebooksHandler) DeleteNotebookHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, NotebookDeleted)
+}
+
+func (handler *NotebooksHandler) ListTopicsHandler(c *gin.Context) {
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
+	topics, err := handler.storage.ListTopics(handler.ctx, authPayload.UserId)
+
+	if err != nil && err != sql.ErrNoRows {
+		fmt.Println("error fetching topics:", err)
+		c.JSON(http.StatusInternalServerError, InternalError)
+		return
+	}
+
+	c.JSON(http.StatusOK, topics)
+}
+
+func (handler *NotebooksHandler) GetNotebookTitlesByTopic(c *gin.Context) {
+	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
+	topicQuery := c.Query("topic")
+
+	arg := db.GetNotebookTitlesByTopicParams{
+		UserID: authPayload.UserId,
+		Topic:  topicQuery,
+	}
+	notebookTitles, err := handler.storage.GetNotebookTitlesByTopic(handler.ctx, arg)
+	if err != nil && err != sql.ErrNoRows {
+		fmt.Println("error fetching notebooks:", err)
+		c.JSON(http.StatusInternalServerError, InternalError)
+		return
+	}
+
+	fmt.Println("api data:", notebookTitles)
+
+	c.JSON(http.StatusOK, notebookTitles)
 }
