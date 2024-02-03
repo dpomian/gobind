@@ -7,15 +7,89 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link href="/static/css/style.css" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/highlight.js/latest/styles/github.min.css">
+
     <title>Binder</title>
 </head>
-<body hx-get="/binder/content" hx-target="#wrapper-container" hx-trigger="load">
+<!-- <body hx-get="/binder/content" hx-target="#wrapper-container" hx-trigger="load"> -->
+<body>
+    <script src="https://cdn.jsdelivr.net/highlight.js/latest/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-    <div id="wrapper-container">
+    <div class="container-fluid" id="mainappcontainer" data-bs-theme="dark">
+        <div id="add-notebook-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered" id="add-notebook-modal-dialog">
+                <form hx-post="/notebooks" hx-target="#add-notebook-modal-dialog" class="modal-content mx-auto">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add new notebook</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <div class="mb-3">
+                                <label class="my-floating-label" for="input-title">Title</label>
+                                <input type="text" name="title" class="form-control" id="input-title">
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <div class="mb-3">
+                                <label class="my-floating-label" for="input-topic">Topic</label>
+                                <input list="topic-options" class="form-control" id="input-topic" name="topic" placeholder="Topic" hx-get="/notebooks/topics" hx-trigger="input delay:500ms" hx-target="#topic-options"/>
+        
+                                <datalist id="topic-options">
+                                </datalist>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="container text-align" hx-get="/notebooks/lite" hx-target="#accordion-topics" hx-trigger="load">
+            <div class="row mt-3">
+                <div class="col-3">
+                    <button type="button" class="btn btn-danger" hx-get="/logout" hx-trigger="click" hx-target="#dummydiv">Logout</button>
+                </div>
+                <div class="col-9">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="inputGroup-sizing-default">Search</span>
+                        <input type="text" class="form-control" value="" name="text" placeholder="looking for something?" hx-get="/notebooks/search" hx-trigger="input changed delay:300ms, search" hx-target="#accordion-topics">
+                      </div>                  
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-3">
+                    <h5><div id="accordion-title">Notebooks</div></h5>
+                    <div class="accordion" id="accordion-topics">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="create-new-notebook" data-bs-toggle="modal" data-bs-target="#add-notebook-modal">+ New Notebook</button>
+                </div>
+                <div class="col-9">
+                    <div id="md-wrapper" style="display: none">
+                        <div id="document-content" style="float: left; width: 100%; display: block">
+                            <div id="notebook-toolbar" class="notebook-toolbar">
+                                <h5><div id="notebook-title" class="element-title1">Document Title goes here</div></h5>
+                        </div>
+                
+                        <div id="markdown-editor-container">
+                            <div id="markdown-editor-wrapper">
+                                <textarea id="markdown-editor">aaaa</textarea>
+                            </div>
+                        </div>
+                        <!-- <button id="save-button" style="float: left">Save</button> -->
+                        <button type="button" class="btn btn-primary" id="save-button" hx-put="js:{getPostUrl()}" hx-trigger="click" hx-vals="js:{active_notebook: getActiveNotebook()}" hx-swap="none" style="float: left">Save</button>
+                        <button type="button" class="btn btn-danger" id="delete-button" style="float: right">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+        
 
     <div id="dummydiv"></div>
 
@@ -31,6 +105,10 @@
                         shortcuts: {
                             "toggleFullScreen": "Cmd-Shift-F",
                         },
+                        renderingConfig: {
+		                    singleLineBreaks: false,
+		                    codeSyntaxHighlighting: true,
+	                    },
                     });
 
                     let timeout;
@@ -122,6 +200,18 @@
             }
             return activeNotebook;
         }
+
+        document.body.addEventListener('htmx:responseError', function(event) {
+            console.log("response error in htmx");
+            console.log(event.detail.xhr.status);
+            if (event.detail.xhr.status === 401) {
+                // alert("Unauthorized access. Please log in.");
+                console.log("Unauthorized access. Please log in.");
+                // Redirect to login page or show login modal, etc.
+                window.location.href = "/login";
+            }
+        });
+
     </script>
 </body>
 </html>

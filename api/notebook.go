@@ -250,9 +250,18 @@ func (handler *NotebooksHandler) DeleteNotebookHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, NotebookDeleted)
 }
 
+type rsTopicList struct {
+	Topics []string `json:"topics"`
+}
+
 func (handler *NotebooksHandler) ListTopicsHandler(c *gin.Context) {
 	authPayload := c.MustGet(authPayloadKey).(*token.Payload)
-	topics, err := handler.storage.ListTopics(handler.ctx, authPayload.UserId)
+
+	arg := db.ListTopicsParams{
+		UserID: authPayload.UserId,
+		Topic:  "%" + c.Query("topic") + "%",
+	}
+	topics, err := handler.storage.ListTopics(handler.ctx, arg)
 
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println("error fetching topics:", err)
@@ -260,7 +269,7 @@ func (handler *NotebooksHandler) ListTopicsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, topics)
+	c.JSON(http.StatusOK, rsTopicList{Topics: topics})
 }
 
 func (handler *NotebooksHandler) GetNotebookTitlesByTopic(c *gin.Context) {
