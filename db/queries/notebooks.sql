@@ -41,4 +41,4 @@ WHERE user_id = $1 and deleted = false and (title ILIKE $2 or content ILIKE $2 o
 
 -- name: ListTopics :many
 SELECT DISTINCT(topic) from notebooks
-WHERE user_id = $1;
+WHERE user_id = $1 and topic ILIKE $2;

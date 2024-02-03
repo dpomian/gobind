@@ -12,15 +12,27 @@
 }
 
 body{
-    /* background: linear-gradient(90deg, rgb(174, 203, 255) 0%, rgb(172, 236, 248) 35%, rgb(159, 238, 254) 100%); */
-    /* background: linear-gradient(90deg, rgb(100, 169, 178) 20%, rgb(45, 124, 243) 85%); */
     background: var(--my-bg-gray);
     font-family: 'Poppins', sans-serif';
+}
+
+.form-label{
+    color: white;
+    font-size: large;
+}
+
+.modal-title{
+    color: white;
+}
+
+.my-floating-label{
+    color: white;
 }
 
 #loginform{
     width: 24%;
     background-color: white;
+    /* background-color: var(--my-bg-gray); */
     padding: 50px;
     border-radius: 20px;
     margin-top: 150px;
@@ -30,18 +42,23 @@ body{
     width: 100%;
 }
 
-#loginform .form-control{
+/* #loginform .form-control{
     color: rgba(0,0,0,.87);
     border-bottom-color: rgba(0,0,0,.87);
     box-shadow: none !important;
     border: none;
     border-bottom: 1px solid;
     border-radius: 4px 4px 0 0;
-}
+} */
 
 #loginform .form-label{
     font-family: 800 !important;
     font-size: large;
+    color: var(--my-bg-gray);
+}
+
+.form-control::placeholder {
+    font-style: italic;
 }
 
 #loginform .form-control::placeholder {

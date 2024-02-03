@@ -52,4 +52,4 @@ uiserve:
 mock:
 	mockgen -package mockdb -destination db/mock/storage.go github.com/dpomian/gobind/db/sqlc Storage
 
-.PHONY: postgres createdb createdbut migrateup migratedown migrateup1 migratedown1 migrateuput migratedownut migrateuput1 migratedownut1 sqlc ut serve mock
+.PHONY: postgres createdb createdbut migrateup migratedown migrateup1 migratedown1 migrateuput migratedownut migrateuput1 migratedownut1 sqlc ut serve mock uiserve

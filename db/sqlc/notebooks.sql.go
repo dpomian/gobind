@@ -195,11 +195,16 @@ func (q *Queries) ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([
 
 const listTopics = `-- name: ListTopics :many
 SELECT DISTINCT(topic) from notebooks
-WHERE user_id = $1
+WHERE user_id = $1 and topic ILIKE $2
 `
 
-func (q *Queries) ListTopics(ctx context.Context, userID uuid.UUID) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, listTopics, userID)
+type ListTopicsParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	Topic  string    `json:"topic"`
+}
+
+func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listTopics, arg.UserID, arg.Topic)
 	if err != nil {
 		return nil, err
 	}

@@ -61,7 +61,7 @@ func (server *Server) configureRoutes() {
 	authRoutes.PUT("/api/v1/notebooks/:id", notebookApiHandler.UpdateNotebookHandler)
 	authRoutes.GET("/api/v1/notebooks/search", notebookApiHandler.SearchNotebookHandler)
 	authRoutes.DELETE("/api/v1/notebooks/:id", notebookApiHandler.DeleteNotebookHandler)
-	authRoutes.GET("/api/v1/topics", notebookApiHandler.ListTopicsHandler)
+	authRoutes.GET("/api/v1/notebooks/topics", notebookApiHandler.ListTopicsHandler)
 
 	userApiHandler := NewUserHander(server.config, server.tokenMaker, server.storage, context.Background())
 	router.POST("/api/v1/users", userApiHandler.AddNewUserHandler)

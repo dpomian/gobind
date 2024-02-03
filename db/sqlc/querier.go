@@ -21,7 +21,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	ListNotebooks(ctx context.Context, arg ListNotebooksParams) ([]Notebook, error)
-	ListTopics(ctx context.Context, userID uuid.UUID) ([]string, error)
+	ListTopics(ctx context.Context, arg ListTopicsParams) ([]string, error)
 	SearchNotebooks(ctx context.Context, arg SearchNotebooksParams) ([]Notebook, error)
 	UpdateNotebook(ctx context.Context, arg UpdateNotebookParams) (Notebook, error)
 }

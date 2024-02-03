@@ -1,28 +1,42 @@
-<div class="container-fluid">
-    <form hx-post="/login" hx-target="#dummydiv" class="mx-auto" id="loginform">
-        <h4 class="text-center">Login</h4>
-        <div class="mb-3 mt-5">
-          <label for="login-email" class="form-label">Email address</label>
-          <input type="email" name="email" class="form-control" id="login-email" aria-describedby="emailHelp" placeholder="email address...">
-        </div>
-        <div class="mb-3 mt-5">
-          <label for="login-password" class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" id="login-password" placeholder="password...">
-        </div>
-        
-        <button type="submit" class="btn btn-primary mt-4">Login</button>
-      </form>
-</div>
-<!-- 
-<h2>Login</h2>
-<form hx-post="/login" hx-target="#dummydiv">
-    <div>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="/static/css/style.css" rel="stylesheet">
+
+    <title>Binder Login</title>
+</head>
+<body>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <div class="container-fluid">
+        <form hx-post="/login" hx-target="#dummydiv" class="mx-auto" id="loginform">
+            <h4 class="text-center">Separate Login</h4>
+            <div class="form-floating mb-4 mt-5">
+                <input type="email" name="email" class="form-control" id="floatingInput" placeholder="name@example.com">
+                <label for="floatingInput">Email address</label>
+              </div>
+              <div class="form-floating mb-4 mt-3">
+                <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password">
+                <label for="floatingPassword">Password</label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary mt-4">Login</button>
+          </form>
     </div>
-    <div>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Login</button>
-</form> -->
+
+    <div id="dummydiv" style="display: none;"></div>
+
+    <script>
+        htmx.on("htmx:beforeSwap", (e) => {
+            if (e.detail.target.id == "dummydiv") {
+                e.detail.shouldSwap = false;
+                window.location.href = "/binder";
+            }
+        });
+    </script>
+</body>
+</html>

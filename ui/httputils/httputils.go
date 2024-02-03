@@ -109,7 +109,11 @@ func SendRequest(
 	client := &http.Client{}
 	httpRs, err := client.Do(httpRq)
 	if err != nil {
-		return nil, httpRs.StatusCode, fmt.Errorf("error in POST request: %w", err)
+		if httpRs != nil {
+			return nil, httpRs.StatusCode, fmt.Errorf("error in %s request: %w", requestType, err)
+		} else {
+			return nil, http.StatusInternalServerError, fmt.Errorf("error in %s request: %w", requestType, err)
+		}
 	}
 	if httpRs.StatusCode != http.StatusOK {
 		return nil, httpRs.StatusCode, fmt.Errorf("returned status not OK: %d", httpRs.StatusCode)

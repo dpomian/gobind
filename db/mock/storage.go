@@ -192,7 +192,7 @@ func (mr *MockStorageMockRecorder) ListNotebooks(arg0, arg1 any) *gomock.Call {
 }
 
 // ListTopics mocks base method.
-func (m *MockStorage) ListTopics(arg0 context.Context, arg1 uuid.UUID) ([]string, error) {
+func (m *MockStorage) ListTopics(arg0 context.Context, arg1 db.ListTopicsParams) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListTopics", arg0, arg1)
 	ret0, _ := ret[0].([]string)
