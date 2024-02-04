@@ -143,6 +143,9 @@
     
                 // update the markdown section
                 simplemde.value(activeNotebook.notebook_content);
+                if(simplemde.isPreviewActive()) {
+                    simplemde.togglePreview();
+                }
     
                 var markdownContent = simplemde.value();
     

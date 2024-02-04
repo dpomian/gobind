@@ -62,6 +62,8 @@ func main() {
 	withLoginRouter.POST("/login", rqHandler.HandleLoginPost)
 	withLoginRouter.GET("/login", rqHandler.HandleLoginGet)
 	withLoginRouter.GET("/logout", rqHandler.HandleUserLogout)
+	withLoginRouter.GET("/register", rqHandler.HandleUserRegistrationGet)
+	withLoginRouter.POST("/register", rqHandler.HandleUserRegistrationPost)
 
 	// notebooks
 	withLoginRouter.GET("/binder", rqHandler.HandleBinderHomePage)
