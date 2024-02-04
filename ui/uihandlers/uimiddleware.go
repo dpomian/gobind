@@ -18,9 +18,9 @@ const (
 	CtxAccessTokenKey = "access_token"
 )
 
-func UiMiddleware(redisClient *redis.Client) gin.HandlerFunc {
+func UiMiddleware(redisClient *redis.Client, config utils.UIConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		accessToken := getAccessToken(redisClient, context.Background(), c)
+		accessToken := getAccessToken(redisClient, context.Background(), c, config)
 		requestPath := c.Request.URL.Path
 
 		switch requestPath {
@@ -64,7 +64,7 @@ type loginDetails struct {
 	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
 }
 
-func getAccessToken(redisClient *redis.Client, ctx context.Context, c *gin.Context) *string {
+func getAccessToken(redisClient *redis.Client, ctx context.Context, c *gin.Context, config utils.UIConfig) *string {
 	session := sessions.Default(c)
 	sessionId := session.Get("session_id")
 
@@ -97,7 +97,7 @@ func getAccessToken(redisClient *redis.Client, ctx context.Context, c *gin.Conte
 					return nil
 				} else {
 					postData, err := json.Marshal(rqRenewAccessToken{RefreshToken: lgDetails.RefreshToken})
-					url := "http://localhost:5050/api/v1/tokens/renew_access"
+					url := config.BinderApiBaseUrl + "/api/v1/tokens/renew_access"
 					headers := httputils.NewHeaders().WithJsonContentTypeHeader()
 					responseData, statusCode, err := httputils.SendPOSTRequest(url, headers, postData)
 

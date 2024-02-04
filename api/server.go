@@ -10,6 +10,7 @@ import (
 	"github.com/dpomian/gobind/token"
 	"github.com/dpomian/gobind/utils"
 	"github.com/gin-gonic/gin"
+	cors "github.com/rs/cors/wrapper/gin"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,7 +51,7 @@ func newTestServer(t *testing.T, storage db.Storage) *Server {
 
 func (server *Server) configureRoutes() {
 	router := gin.Default()
-	router.Use(corsMiddleware())
+	router.Use(cors.Default())
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 

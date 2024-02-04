@@ -55,12 +55,15 @@ func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("origin")
 		fmt.Println("origin:", origin)
+		fmt.Println("request header:", c.Request.Header)
 
-		if origin == "http://localhost" || origin == "http://localhost:5051" {
+		if origin == "http://localhost" || origin == "http://localhost:5050" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		} else {
+			fmt.Println("origin is not localhost or localhost:5050, origin:", origin)
 		}
 
 		if c.Request.Method == "OPTIONS" {

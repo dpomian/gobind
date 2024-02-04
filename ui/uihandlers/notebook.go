@@ -40,7 +40,7 @@ func (handler *RqHandler) HandleNotebookLite(c *gin.Context) {
 	notebookPerTopicMap := make(map[string][]rsNotebookLite)
 	notebooks := []rsNotebook{}
 
-	url := "http://localhost:5050/api/v1/notebooks/search"
+	url := handler.config.BinderApiBaseUrl + "/api/v1/notebooks/search"
 	headers := httputils.NewHeaders().WithAuthorizationHeader("Bearer " + accessToken)
 	queries := httputils.NewQueries().Add("text", c.Query("text"))
 	response, statusCode, err := httputils.SendRequest(httputils.RequestTypeGet, url, headers, queries, nil)
@@ -101,7 +101,7 @@ func (handler *RqHandler) HandleGetNotebookDetails(c *gin.Context) {
 	notebookBriefDetails := NotebookBriefDetails{}
 	notebookId := c.Param("id")
 	if len(notebookId) > 0 {
-		url := "http://localhost:5050/api/v1/notebooks/" + notebookId
+		url := handler.config.BinderApiBaseUrl + "/api/v1/notebooks/" + notebookId
 		headers := httputils.NewHeaders().
 			WithJsonContentTypeHeader().
 			WithAuthorizationHeader("Bearer " + accessToken)
@@ -199,7 +199,7 @@ func (handler *RqHandler) HandleSaveNotebook(c *gin.Context) {
 		return
 	}
 
-	url := "http://localhost:5050/api/v1/notebooks/" + notebookId
+	url := handler.config.BinderApiBaseUrl + "/api/v1/notebooks/" + notebookId
 	headers := httputils.NewHeaders().
 		WithJsonContentTypeHeader().
 		WithAuthorizationHeader("Bearer " + accessToken)
@@ -244,7 +244,7 @@ func (handler *RqHandler) HandleAddNotebook(c *gin.Context) {
 
 	jsonData, _ := json.Marshal(rq)
 
-	url := "http://localhost:5050/api/v1/notebooks"
+	url := handler.config.BinderApiBaseUrl + "/api/v1/notebooks"
 	headers := httputils.NewHeaders().
 		WithJsonContentTypeHeader().
 		WithAuthorizationHeader("Bearer " + accessToken)
@@ -265,7 +265,7 @@ func (handler *RqHandler) HandleGetNotebookTopics(c *gin.Context) {
 	topicSubstring := c.Query("topic")
 	var topicOptions rsTopicList
 
-	url := "http://localhost:5050/api/v1/notebooks/topics"
+	url := handler.config.BinderApiBaseUrl + "/api/v1/notebooks/topics"
 	queries := httputils.NewQueries().Add("topic", topicSubstring)
 	headers := httputils.NewHeaders().
 		WithJsonContentTypeHeader().

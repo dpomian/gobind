@@ -1,0 +1,39 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16.1-alpine3.19
+    environment:
+      - POSTGRES_USER=${DKR_POSTGRES_USR}
+      - POSTGRES_PASSWORD=${DKR_POSTGRES_PWD}
+      - POSTGRES_DB=binder
+    volumes:
+      - ${SHARED_POSTGRES_DB_VOLUME}:/var/lib/postgresql/data
+    ports:
+      - "5444:5432"
+  
+  redis:
+    image: redis:7.2.4-alpine
+    ports:
+      - "6379:6379"
+
+  binder__api:
+    build:
+      context: .
+      dockerfile: Dockerfile_api
+    ports:
+      - "5051:5051"
+    environment:
+      - BINDER_DB_SOURCE=postgres://postgres:${DKR_POSTGRES_PWD}@postgres:5432/binder?sslmode=disable
+      - BINDER_API_SERVER_ADDRESS=:5051
+      - BINDER_DB_DRIVER=postgres
+
+  binder__ui:
+    build:
+      context: .
+      dockerfile: Dockerfile_ui
+    ports:
+      - "5050:5050"
+    environment:
+      - BINDER_UI_SERVER_ADDRESS=:5050
+      - BINDER_API_BASE_URL=http://binder__api:5051
+      - REDIS_URI=redis:6379

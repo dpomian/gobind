@@ -1,0 +1,19 @@
+# Build stage
+
+FROM golang:1.21.6-alpine3.19 AS builder
+WORKDIR /gobindui
+COPY . .
+RUN go build -o mainui ui/main_ui.go
+
+# Run stage
+FROM alpine:3.19
+WORKDIR /gobindui
+
+COPY --from=builder /gobindui/mainui .
+COPY --from=builder /gobindui/ui/templates ./ui/templates
+COPY --from=builder /gobindui/ui/static ./ui/static
+
+
+EXPOSE 5050
+
+CMD ["/gobindui/mainui"]
