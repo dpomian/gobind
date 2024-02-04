@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
-/gobindapp/mainapi &
-/gobindapp/mainui &
+/gobindapp/mainapi
+# /gobindapp/mainui

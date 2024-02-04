@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"net/http"
-	"os"
 
 	"github.com/dpomian/gobind/ui/uihandlers"
+	"github.com/dpomian/gobind/utils"
 	"github.com/gin-contrib/sessions"
 	redisStore "github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
@@ -17,27 +17,25 @@ var (
 	UnauthorizedRs = gin.H{"error": "unauthorized"}
 )
 
-type UIConfig struct {
-	REDIS_URI    string `mapstructure:"REDIS_URI"`
-	REDIS_SECRET string `mapstructure:"REDIS_SECRET"`
-}
-
 func main() {
-	uiConfig := readUiConfig()
-	store, err := redisStore.NewStore(10, "tcp", uiConfig.REDIS_URI, "", []byte(uiConfig.REDIS_SECRET))
+	uiConfig, _ := utils.LoadUiConfig("path/to/config")
+	fmt.Println("uiconfig: ", uiConfig)
+	fmt.Println("redisUri: ", uiConfig.RedisUri)
+
+	store, err := redisStore.NewStore(10, "tcp", uiConfig.RedisUri, "", []byte(uiConfig.RedisSecret))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error creating the redisStore, err:", err)
 	}
 	store.Options(sessions.Options{
-		Path:     "/",
-		MaxAge:   60 * 60 * 24, // 24 hours
+		Path:   "/",
+		MaxAge: 60 * 60 * 24, // 24 hours
+		// SameSite: http.SameSiteStrictMode,
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
 		Secure:   false, // Set to true in production with HTTPS
 	})
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_URI"),
+		Addr:     uiConfig.RedisUri,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 		Protocol: 3,  // specify 2 for RESP 2 or 3 for RESP 3
@@ -50,10 +48,10 @@ func main() {
 	router := gin.Default()
 	withLoginRouter := router.Group("/").
 		Use(sessions.Sessions("binder-com", store)).
-		Use(uihandlers.UiMiddleware(redisClient))
+		Use(uihandlers.UiMiddleware(redisClient, uiConfig))
 
 	errorHandler := uihandlers.NewUiErrorResponseHandler(redisClient)
-	rqHandler := uihandlers.NewRqHandler(*errorHandler, redisClient)
+	rqHandler := uihandlers.NewRqHandler(*errorHandler, redisClient, uiConfig)
 
 	router.LoadHTMLGlob("ui/templates/*")
 	router.Static("/static", "ui/static")
@@ -75,12 +73,5 @@ func main() {
 	withLoginRouter.GET("/notebooks/lite", rqHandler.HandleNotebookLite)
 	withLoginRouter.GET("/notebooks/topics", rqHandler.HandleGetNotebookTopics)
 
-	router.Run(":5051")
-}
-
-func readUiConfig() UIConfig {
-	return UIConfig{
-		REDIS_URI:    os.Getenv("REDIS_URI"),
-		REDIS_SECRET: "secret",
-	}
+	router.Run(uiConfig.ServerAddress)
 }

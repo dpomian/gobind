@@ -18,10 +18,10 @@ func init() {
 }
 
 func main() {
-	startGinServer(":5050")
+	startGinServer()
 }
 
-func startGinServer(address string) {
+func startGinServer() {
 	config, err := utils.LoadConfig("")
 	if err != nil {
 		log.Fatal("cannot load config")
@@ -41,5 +41,5 @@ func startGinServer(address string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	server.Start(address)
+	server.Start(config.ServerAddress)
 }

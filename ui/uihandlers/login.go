@@ -46,7 +46,7 @@ func (handler *RqHandler) HandleLoginPost(c *gin.Context) {
 		fmt.Println("error marshalling data:", err)
 		return
 	}
-	url := "http://localhost:5050/api/v1/users/login"
+	url := handler.config.BinderApiBaseUrl + "/api/v1/users/login"
 	headers := httputils.NewHeaders().WithJsonContentTypeHeader()
 	responseData, statusCode, err := httputils.SendPOSTRequest(url, headers, postData)
 
@@ -115,7 +115,7 @@ func (handler *RqHandler) HandleUserRegistrationPost(c *gin.Context) {
 	}
 
 	fmt.Println("postData:", postData)
-	url := "http://localhost:5050/api/v1/users"
+	url := handler.config.BinderApiBaseUrl + "/api/v1/users"
 	headers := httputils.NewHeaders().WithJsonContentTypeHeader()
 	_, statusCode, err := httputils.SendPOSTRequest(url, headers, postData)
 

@@ -1,0 +1,16 @@
+# Build stage
+
+FROM golang:1.21.6-alpine3.19 AS builder
+WORKDIR /gobindapi
+COPY . .
+RUN go build -o mainapi main_api.go
+
+# Run stage
+FROM alpine:3.19
+WORKDIR /gobindapi
+
+COPY --from=builder /gobindapi/mainapi .
+
+EXPOSE 5051
+
+CMD ["/gobindapi/mainapi"]
