@@ -21,9 +21,16 @@ const (
 func UiMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		accessToken := getAccessToken(redisClient, context.Background(), c)
+		requestPath := c.Request.URL.Path
 
-		if c.Request.URL.Path == "/login" && accessToken == nil {
-			fmt.Println("url path is /login and accessToken is nil")
+		switch requestPath {
+		case "/login":
+			if accessToken == nil {
+				fmt.Println("url path is /login and accessToken is nil")
+				c.Next()
+				return
+			}
+		case "/register":
 			c.Next()
 			return
 		}
