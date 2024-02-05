@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/dpomian/gobind/ui/httputils"
@@ -27,10 +28,16 @@ type rsNotebookLite struct {
 	Title string    `json:"title"`
 }
 
+type notebooksByTitle []rsNotebookLite
+
 type rsNotebookLitePerTopic struct {
 	Topic     string           `json:"topic"`
 	Notebooks []rsNotebookLite `json:"notebooks"`
 }
+
+func (nb notebooksByTitle) Len() int           { return len(nb) }
+func (nb notebooksByTitle) Less(i, j int) bool { return nb[i].Title < nb[j].Title }
+func (nb notebooksByTitle) Swap(i, j int)      { nb[i], nb[j] = nb[j], nb[i] }
 
 func (handler *RqHandler) HandleNotebookLite(c *gin.Context) {
 	const htmlTemplate = "notebooks_accordion.html"
@@ -64,10 +71,17 @@ func (handler *RqHandler) HandleNotebookLite(c *gin.Context) {
 		notebookPerTopicMap[notebook.Topic] = append(notebookPerTopicMap[notebook.Topic], nbLite)
 	}
 
-	for nk, nv := range notebookPerTopicMap {
+	nbKeys := make([]string, 0, len(notebookPerTopicMap))
+	for key := range notebookPerTopicMap {
+		nbKeys = append(nbKeys, key)
+	}
+	sort.Strings(nbKeys)
+
+	for _, nbk := range nbKeys {
+		sort.Sort(notebooksByTitle(notebookPerTopicMap[nbk]))
 		nbLitePerTopic := rsNotebookLitePerTopic{
-			Topic:     nk,
-			Notebooks: nv,
+			Topic:     nbk,
+			Notebooks: notebookPerTopicMap[nbk],
 		}
 		rsNotebookPerTopic = append(rsNotebookPerTopic, nbLitePerTopic)
 	}
