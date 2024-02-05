@@ -44,10 +44,10 @@ ut:
 	BINDER_DB_DRIVER=postgres BINDER_DB_SOURCE="postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder_ut?sslmode=disable" go test -timeout 60s -cover ./...
 
 apiserve:
-	BINDER_API_SERVER_ADDRESS=":5051" BINDER_DB_DRIVER=postgres BINDER_DB_SOURCE="postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder?sslmode=disable" go run main_api.go
+	BINDER_API_SERVER_ADDRESS=":5056" BINDER_DB_DRIVER=postgres BINDER_DB_SOURCE="postgres://postgres:${DKR_POSTGRES_PWD}@localhost:${DKR_POSTGRES_PORT}/binder?sslmode=disable" go run main_api.go
 
 uiserve:
-	BINDER_UI_SERVER_ADDRESS=":5050" BINDER_API_BASE_URL="http://localhost:5051" REDIS_URI=localhost:6379 go run ui/main_ui.go
+	BINDER_UI_SERVER_ADDRESS=":5055" BINDER_API_BASE_URL="http://localhost:5056" REDIS_URI=localhost:6379 go run ui/main_ui.go
 
 mock:
 	mockgen -package mockdb -destination db/mock/storage.go github.com/dpomian/gobind/db/sqlc Storage

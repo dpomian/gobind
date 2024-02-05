@@ -26,6 +26,8 @@ services:
       - BINDER_DB_SOURCE=postgres://postgres:${DKR_POSTGRES_PWD}@postgres:5432/binder?sslmode=disable
       - BINDER_API_SERVER_ADDRESS=:5051
       - BINDER_DB_DRIVER=postgres
+    depends_on:
+      - postgres
 
   binder__ui:
     build:
@@ -37,3 +39,6 @@ services:
       - BINDER_UI_SERVER_ADDRESS=:5050
       - BINDER_API_BASE_URL=http://binder__api:5051
       - REDIS_URI=redis:6379
+    depends_on:
+      - redis
+      - binder__api
